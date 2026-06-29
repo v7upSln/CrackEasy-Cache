@@ -1,0 +1,53 @@
+name: RSS Fetch
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Runs cleanly every 6 hours
+  workflow_dispatch:
+
+# permissions
+permissions:
+  contents: write
+
+concurrency:
+  group: rss-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Execute RSS Stream Parsing
+      run: python update.py
+
+    - name: Commit and Push Database Changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Staging only data targets to keep repo structure lean
+        git add metadata/ Cache/
+        
+        if ! git diff --cached --quiet; then
+          git commit -m "sync: ingest fresh database changes from feed"
+          git push
+        else
+          echo "No database changes detected. Exiting safely."
+        fi

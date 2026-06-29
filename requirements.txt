@@ -1,0 +1,2 @@
+beautifulsoup4==4.15.0
+undetected_chromedriver==3.5.5
