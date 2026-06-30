@@ -9,6 +9,7 @@ import undetected_chromedriver as uc
 
 META_DIR = "metadata"
 OUTPUT_FILE = "pop_repacks.json"
+POP_LIST_FILE = "popular_repacks_list.json"
 
 def get_md5(text):
     return hashlib.md5(text.strip().encode('utf-8')).hexdigest()
@@ -119,8 +120,7 @@ def main():
     driver = make_driver(headless=headless_tracker[0])
 
     chart_collections = {"monthly": [], "yearly": []}
-    
-    # Track which absolute file paths are actively seen on the charts
+    live_popular_catalog = {}
     active_monthly_paths = set()
     active_yearly_paths = set()
 
@@ -129,9 +129,6 @@ def main():
         ("yearly", "https://fitgirl-repacks.site/popular-repacks-of-the-year/", active_yearly_paths)
     ]
 
-    # ═══════════════════════════════════════════════════════════
-    # PHASE 1: SCRAPE AND RESOLVE TARGET PATHS
-    # ═══════════════════════════════════════════════════════════
     for chart_type, url, active_paths_set in targets:
         print(f"\n[*] Requesting {chart_type.upper()} charts page lookup -> {url}")
         driver, html_src = load_page_safely(driver, url, headless_tracker)
@@ -142,6 +139,13 @@ def main():
             game_url = g["url"]
             game_title = g["title"]
             game_id = get_md5(game_url)
+            
+            if game_id not in live_popular_catalog:
+                live_popular_catalog[game_id] = {
+                    "id": game_id,
+                    "title": game_title,
+                    "url": game_url
+                }
             
             target_filepath = None
             status = "Unknown"
@@ -168,7 +172,6 @@ def main():
 
             if target_filepath:
                 active_paths_set.add(os.path.abspath(target_filepath))
-                # Grab a snapshot of the current state for compilation log usage
                 try:
                     with open(target_filepath, "r", encoding="utf-8") as f:
                         current_data = json.load(f)
@@ -177,7 +180,6 @@ def main():
                     pass
                 print(f"    [✓] Flagged active tracking vector for: {os.path.basename(target_filepath)} [{status}]")
             else:
-                # If a popular game doesn't exist in local DB files yet
                 compiled_item = {
                     "id": game_id,
                     "title": game_title,
@@ -191,9 +193,6 @@ def main():
 
     driver.quit()
 
-    # ═══════════════════════════════════════════════════════════
-    # PHASE 2: GLOBAL SWEEP & PURGE OPERATION
-    # ═══════════════════════════════════════════════════════════
     print("\n[*] Running global database consistency sweep to purge stale popularity flags...")
     
     if os.path.exists(META_DIR):
@@ -206,11 +205,9 @@ def main():
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 
-                # Check actual chart verification presence
                 should_be_monthly = file_path in active_monthly_paths
                 should_be_yearly = file_path in active_yearly_paths
                 
-                # Check state changes to eliminate unnecessary filesystem disk I/O writes
                 modified = False
                 if data.get("pop_repack_monthly", False) != should_be_monthly:
                     data["pop_repack_monthly"] = should_be_monthly
@@ -226,11 +223,22 @@ def main():
             except Exception as e:
                 print(f"    [-] Error verification sweep context for file {filename}: {e}")
 
-    # Write data index summary matrix log catalog
+    # Write full detailed collections structure
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(chart_collections, f, ensure_ascii=False, indent=2)
+        
+    # Write clean root catalog file containing only active items with name and md5 hash
+    root_pop_output = {
+        "last_updated": int(time.time()),
+        "total_popular": len(live_popular_catalog),
+        "items": list(live_popular_catalog.values())
+    }
+    with open(POP_LIST_FILE, "w", encoding="utf-8") as f:
+        json.dump(root_pop_output, f, ensure_ascii=False, indent=2)
     
-    print(f"\n[+] Script sequence complete. Database state purged and written to: {OUTPUT_FILE}")
+    print(f"\n[+] Script sequence complete.")
+    print(f"    [+] Comprehensive details logged to: {OUTPUT_FILE}")
+    print(f"    [+] Filtered active popular list written to root: {POP_LIST_FILE}")
 
 if __name__ == "__main__":
     main()
