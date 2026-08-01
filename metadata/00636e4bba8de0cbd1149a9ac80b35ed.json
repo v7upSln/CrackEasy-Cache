@@ -19,5 +19,6 @@
     "magnet:?xt=urn:btih:8D8BD996002E8D50CD9079D39F6154F7613CCD7B",
     "magnet:?xt=urn:btih:6ec7447929725430420298d4fb54d0a7e8afebd1&dn=rutor.info_Tom+Clancy%27s+Ghost+Recon%3A+Wildlands+-+Ultimate+Edition+%5BBuild+4073014+%2B+DLCs%5D+%282017%29+PC+%7C+RePack+%D0%BE%D1%82+FitGirl&tr=udp://opentor.org:2710&tr=udp://opentor.org:2710&tr=http://retracker.local/announce",
     "magnet:?xt=urn:btih:1C39495423163FE7C78CC3536AB2A419FE29E197"
-  ]
+  ],
+  "pop_repack_monthly": true
 }
