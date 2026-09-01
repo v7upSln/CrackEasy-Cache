@@ -11,7 +11,7 @@
     "Racing",
     "3D"
   ],
-  "pop_repack_monthly": true,
+  "pop_repack_monthly": false,
   "pop_repack_yearly": true,
   "magnets": [
     "magnet:?xt=urn:btih:a634dc946d49989526058626caa3bbabba4607b6",
