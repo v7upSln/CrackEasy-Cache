@@ -1,4 +1,4 @@
-# crackeasy-cache
+# fitgirl-cache
 
 A simple flat-file JSON database of game repack metadata.
 
