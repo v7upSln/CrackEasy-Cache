@@ -2,9 +2,7 @@
 
 A simple flat-file JSON database of game repack metadata.
 
-It updates automatically every few hours using GitHub Actions, so I don't really have to maintain it manually.
-
-Used by **CrackEasy**: https://github.com/v7upsln/crackeasy
+It updates automatically every few hours using GitHub Actions.
 
 ## Data Format
 
